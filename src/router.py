@@ -25,7 +25,8 @@ class Router:
 
     def solve(self, problem: str) -> None:
         for solver in self.solver_pool:
-            self.solutions[problem][solver[0]] = solver[1].solve(problem)
+            # compatible with mcts-llm (https://github.com/NumberChiffre/mcts-llm)
+            self.solutions[problem][solver[0]] = solver[1].solve(problem).answer if solver[0] == "mctsr" else solver[1].solve(problem)
 
     def ensemble(self, names: List[str]) -> None:
         for name in names:
