@@ -9,17 +9,28 @@ class Router:
 
     solver_pool: List[Solver]
 
+    # { problem : {solver name: solution} }
+    solutions: Dict[str, Dict[str, Solver]]
+
+    # { problem : {solver name: grade} }
+    grades: Dict[str, Dict[str, float]]
 
     def __init__(self):
-        pass
+        self.solver_pool = []
+        self.solutions = {}
+        self.grades = {}
 
     def route(self):
         pass
 
-    def ensemble(self, names: List[str]):
+    def solve(self, problem: str) -> None:
+        for solver in self.solver_pool:
+            self.solutions[problem][solver[0]] = solver[1].solve(problem)
+
+    def ensemble(self, names: List[str]) -> None:
         for name in names:
             if name not in NAME2SOLVER.keys():
                 raise ValueError(f"{name} is not a supported solver")
-            self.solver_pool.append(NAME2SOLVER[name])
+            self.solver_pool.append( (name, NAME2SOLVER[name]) )
 
     
