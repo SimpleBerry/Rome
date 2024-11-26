@@ -2,8 +2,8 @@ import dspy
 from mcts_llm.mctsr import MCTSr
 
 
-def create_mctsr():
-    ollama = dspy.OllamaLocal(
+# use dspy to configure the language model
+ollama = dspy.OllamaLocal(
         model="qwen2.5:7b-instruct",
         model_type="chat",
         temperature=1.0,
@@ -11,27 +11,22 @@ def create_mctsr():
         num_ctx=1024,
         timeout_s=600
     )
-    dspy.settings.configure(lm=ollama, experimental=True)
+dspy.settings.configure(lm=ollama, experimental=True)
+
+def create_mctsr():
+    """
+    Create and return a MCTSr model.
+    https://arxiv.org/pdf/2406.07394
+    """
     return MCTSr()
 
-def create_tot():
+def create_tot() -> Solver:
     """
-    Create and return a Tree of Thoughts (ToT) model using dspy settings and a language model.
+    Create and return a Tree of Thoughts (ToT) model.
 
     Returns:
         function: A ToT model function that can solve a problem given a question.
     """
-    # Configure the language model
-    ollama = dspy.OllamaLocal(
-        model="qwen2.5:7b-instruct",
-        model_type="chat",
-        temperature=1.0,
-        max_tokens=1024,
-        num_ctx=1024,
-        timeout_s=600
-    )
-    settings.configure(lm=ollama, experimental=True)
-
     def tot_solver(question: str, max_depth: int = 3, num_children: int = 3, max_rollouts: int = 10) -> str:
         """
         Tree of Thoughts (ToT) solver function.
