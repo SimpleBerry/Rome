@@ -71,6 +71,7 @@ class Summarizer:
 
         sumamry_prompt = f"""
         You are an expert that summarizes the solutions.
+        Following the steps to do the summary: Critize, Rank, Summarize (which means you will learn from these, not only summarizing the answers)
         The solutions are: {", ".join(solutions[:chosen_num])}
         Please provide a summary of the solutions.
         """

@@ -7,10 +7,12 @@ from .config import NAME2SOLVER
 @dataclass
 class Router:
 
-    solver_pool: List[Solver]
+    solver_pool: List[Tuple[str, Solver]]
 
     # { problem : {solver name: solution} }
-    solutions: Dict[str, Dict[str, Solver]]
+    solutions: Dict[str, Dict[str, str]]
+
+    step_solutions: Dict[str, Dict[str, List[str]]]
 
     # { problem : {solver name: grade} }
     grades: Dict[str, Dict[str, float]]
@@ -24,10 +26,14 @@ class Router:
         pass
 
     def solve(self, problem: str) -> None:
-        for solver in self.solver_pool:
+        for name, solver in self.solver_pool:
             # compatible with mcts-llm (https://github.com/NumberChiffre/mcts-llm)
-            self.solutions[problem][solver[0]] = solver[1].solve(problem).answer if solver[0] == "mctsr" else solver[1].solve(problem)
+            self.solutions[problem][name] = solver.solve(problem)
 
+    def step_solve(self, problem: str, max_steps: int = 3) -> None:
+        for name, solver in self.solver_pool:
+            self.step_solutions[problem][name] = solver.step_solve(problem, max_steps)
+            
     def ensemble(self, names: List[str]) -> None:
         for name in names:
             if name not in NAME2SOLVER.keys():
