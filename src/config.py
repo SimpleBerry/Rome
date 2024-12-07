@@ -111,9 +111,9 @@ class TreeSolver(Solver):
             answer = self.external_call(step_prompt)
             # solution_field is a string, try to get the corresponding property
             if isinstance(self.solution_field, str):
-                return getattr(answer, self.solution_field, None)
+                return getattr(answer, self.solution_field, None).split(";;;")
         else:
-            return self.solver.solve(step_prompt)
+            return self.solver.solve(step_prompt).split(";;;")
 
 class AgentSolver(Solver):
 
@@ -155,7 +155,8 @@ def create_mctsr():
     Create and return a MCTSr model.
     https://arxiv.org/pdf/2406.07394
     """
-    return TreeSolver(MCTSr(), MCTSr().solve, "answer")
+    mctsr_instance = MCTSr()
+    return TreeSolver(tree=mctsr_instance, external_call=getattr(mctsr_instance, "forward", None), solution_field="answer")
 
 def create_tot() -> Solver:
     """

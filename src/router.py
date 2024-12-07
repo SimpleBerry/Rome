@@ -1,8 +1,6 @@
-from typing import List, Tuple
-
-
-from .solver import Solver
-from .config import NAME2SOLVER
+from typing import List, Tuple, Dict
+from dataclasses import dataclass
+from config import NAME2SOLVER, Solver
 
 @dataclass
 class Router:

@@ -3,13 +3,13 @@
 """
 
 from typing import List
-from .util import load_model
+from util import load_model
 
 class Summarizer:
     """
         Final component to summarize/aggerate the solutions.
     """
-    self.llm_model = load_model()
+    llm_model = load_model("meta-llama/Llama-3.1-8B-Instruct")
 
     def rank(self, solutions: List[str], order: int = 1) -> List[float]:
         """
