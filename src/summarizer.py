@@ -9,7 +9,11 @@ class Summarizer:
     """
         Final component to summarize/aggerate the solutions.
     """
-    llm_model = load_model("meta-llama/Llama-3.1-8B-Instruct")
+
+    def __init__(self, llm_model_id="meta-llama/Llama-3.1-8B-Instruct", external_call=None, summary_field: str=None):
+        self.llm_model = load_model(llm_model_id)
+        self.external_call = external_call
+        self.summary_field = summary_field
 
     def rank(self, solutions: List[str], order: int = 1) -> List[float]:
         """
@@ -76,8 +80,15 @@ class Summarizer:
         Please provide a summary of the solutions.
         """
 
-        return summarize_text(self.llm_model[0], self.llm_model[1], sumamry_prompt)
+        if self.external_call:
+            answer = self.external_call(sumamry_prompt)
+            # summary_field is a string, try to get the corresponding property
+            if isinstance(self.summary_field, str):
+                return getattr(answer, self.summary_field, None)
+        else:
+            # default using LLM model
+            return summarize_text(self.llm_model[0], self.llm_model[1], sumamry_prompt)
 
 
 
-    
+# if you want to use self-consistency, just replace the summarize function

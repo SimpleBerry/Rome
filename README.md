@@ -20,5 +20,5 @@ pip install -r requirements.txt
 
 This project was made possible thanks to a collaboration with
 
-<a href="https://www.cs.ucmerced.edu/"><img src="https://www.ucmerced.edu/sites/ucmerced.edu/files/ucmlogo_0.gif" height="20"></a>&nbsp;&nbsp;&nbsp;
+<a href="https://www.ucmerced.edu"><img src="https://www.ucmerced.edu/sites/ucmerced.edu/files/ucmlogo_0.gif" height="50"></a>&nbsp;&nbsp;&nbsp;
 <a href="https://huggingface.co/SimpleBerry"><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6407d3d3a7bc7c3865addc4b/TrxnZ6aXVoVTdy6Ek6Rf2.jpeg" height="50"></a>&nbsp;&nbsp;&nbsp;

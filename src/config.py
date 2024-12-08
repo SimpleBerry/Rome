@@ -6,16 +6,20 @@ from typing import List
 
 
 # use dspy to configure the language model
-ollama = dspy.OllamaLocal(
-        model="qwen2.5:7b-instruct",
-        model_type="chat",
-        temperature=1.0,
-        max_tokens=1024,
-        num_ctx=1024,
-        timeout_s=600
-    )
-dspy.settings.configure(lm=ollama, experimental=True)
+# ollama = dspy.OllamaLocal(
+#         model="qwen2.5:7b-instruct",
+#         model_type="chat",
+#         temperature=1.0,
+#         max_tokens=1024,
+#         num_ctx=1024,
+#         timeout_s=600
+#     )
+# dspy.settings.configure(lm=ollama, experimental=True)
 
+lm = dspy.LM("openai/meta-llama/Llama-3.1-8B-Instruct",
+             api_base="http://localhost:7501/v1",  # ensure this points to your port
+             api_key="local", model_type='chat')
+dspy.configure(lm=lm)
 
 class Solver(ABC):
 
@@ -70,10 +74,11 @@ class LlmSolver(Solver):
         pass
 
 class TreeSolver(Solver):
-    def __init__(self, tree, external_call=None, solution_field: str=None):
+    def __init__(self, tree, external_call=None, solution_field: str=None, think=None):
         self.solver = tree
         self.external_call = external_call
         self.solution_field = solution_field
+        self.think = think
 
     def solve(self, problem: str, external_call=None, solution_field: str=None) -> str:
         """
@@ -85,6 +90,12 @@ class TreeSolver(Solver):
 
             Your response should be a single string that contains the complete solution.
             """
+        if not self.solver:    # if no solver passed in
+            if self.think:
+                return self.think(problem)
+            else:
+                self.solver = MCTSr()
+
         if self.external_call:
             answer = self.external_call(prompt)
             # solution_field is a string, try to get the corresponding property
@@ -165,7 +176,7 @@ def create_tot() -> Solver:
     Returns:
         function: A ToT model function that can solve a problem given a question.
     """
-    def tot_solver(question: str, max_depth: int = 3, num_children: int = 3, max_rollouts: int = 10) -> str:
+    def tot_solver(question: str, max_depth: int = 5, num_children: int = 5, max_rollouts: int = 10) -> str:
         """
         Tree of Thoughts (ToT) solver function.
 
@@ -182,7 +193,7 @@ def create_tot() -> Solver:
 
         def query_model(prompt: str) -> str:
             """Queries the model with the given prompt."""
-            return ollama.generate(prompt)
+            return lm(prompt)
 
         def expand_node(thought: str, depth: int) -> List[str]:
             """Generate child thoughts."""
@@ -190,14 +201,14 @@ def create_tot() -> Solver:
             if depth >= max_depth or rollouts >= max_rollouts:
                 return []
             rollouts += 1
-            prompt = f"Based on the thought: '{thought}', generate {num_children} new thoughts to solve: {question}"
-            response = query_model(prompt)
-            return response.split('\n')[:num_children]
+            prompt = f"Based on the thought: '{thought}', generate {num_children} new thoughts to solve: {question}. Return is wrapped in string format and separate by #### ."
+            response = query_model(prompt)[0]
+            return response.split('####')[:num_children]
 
         def evaluate_node(thought: str) -> float:
             """Evaluate the quality of a thought."""
-            prompt = f"Evaluate how likely this thought leads to the correct answer for the question: '{question}'\nThought: {thought}\nScore (0 to 1):"
-            response = query_model(prompt)
+            prompt = f"Evaluate how likely this thought leads to the correct answer for the question: '{question}'\nThought: {thought}\nScore (0 to 1). Directly return the value of score in ####[score value]#### format."
+            response = query_model(prompt)[0].split("####")[1]
             try:
                 return float(response)
             except ValueError:
@@ -221,7 +232,7 @@ def create_tot() -> Solver:
         final_prompt = f"Based on the thought: '{best_thought}', provide a final answer to the question: {question}"
         return query_model(final_prompt)
 
-    return tot_solver
+    return TreeSolver(tree=None, external_call=None, solution_field=None, think=tot_solver)
 
 
 NAME2SOLVER = {
