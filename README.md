@@ -18,6 +18,11 @@ pip install -r requirements.txt
 - [ ] Add more solvers
 - [ ] Add more ensemble patterns
 
+# Contact Us
+```
+jwu323@ucmerced.edu
+```
+
 This project was made possible thanks to a collaboration with
 
 <a href="https://www.ucmerced.edu"><img src="https://www.ucmerced.edu/sites/ucmerced.edu/files/ucmlogo_0.gif" height="50"></a>&nbsp;&nbsp;&nbsp;

@@ -1,4 +1,5 @@
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
 
 def load_model(model_path):
     """
@@ -11,10 +12,11 @@ def load_model(model_path):
         tokenizer: The tokenizer for the model.
         model: The model.
     """
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     try:
         # Load the tokenizer and model from the specified path
         tokenizer = AutoTokenizer.from_pretrained(model_path)
-        model = AutoModelForSeq2SeqLM.from_pretrained(model_path)
+        model = AutoModelForCausalLM.from_pretrained(model_path).to(device)
 
         print("Model and tokenizer successfully loaded from:", model_path)
         return tokenizer, model

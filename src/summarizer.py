@@ -4,6 +4,9 @@
 
 from typing import List
 from util import load_model
+import torch
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class Summarizer:
     """
@@ -32,7 +35,7 @@ class Summarizer:
         """
             Summarize the solutions (I prefer to summarize only first 3 solutions)
         """
-        def summarize_text(tokenizer, model, text, max_input_length=512, max_output_length=150):
+        def summarize_text(tokenizer, model, text, max_input_length=512, max_output_length=1024):
             """
             Summarize a given text using a preloaded model and tokenizer.
 
@@ -41,7 +44,7 @@ class Summarizer:
                 model: The summarization model.
                 text (str): The text to be summarized.
                 max_input_length (int): Maximum length of the input text (default: 512).
-                max_output_length (int): Maximum length of the output summary (default: 150).
+                max_output_length (int): Maximum length of the output summary (default: 1024).
 
             Returns:
                 str: The generated summary.
@@ -53,16 +56,20 @@ class Summarizer:
                     return_tensors="pt", 
                     max_length=max_input_length, 
                     truncation=True
-                )
+                ).to(device)
+
+                model = model.half()
 
                 # Generate the summary
                 summary_ids = model.generate(
-                    inputs, 
-                    max_length=max_output_length, 
-                    min_length=30, 
-                    length_penalty=2.0, 
-                    num_beams=4, 
-                    early_stopping=True
+                    inputs,
+                    max_length=max_output_length,  
+                    num_beams=2,              
+                    temperature=0.95,          
+                    length_penalty=2.0,       
+                    repetition_penalty=1.2,   
+                    early_stopping=True,
+                    use_cache=True
                 )
 
                 # Decode the summary tokens
@@ -76,8 +83,10 @@ class Summarizer:
         sumamry_prompt = f"""
         You are an expert that summarizes the solutions.
         Following the steps to do the summary: Critize, Rank, Summarize (which means you will learn from these, not only summarizing the answers)
-        The solutions are: {", ".join(solutions[:chosen_num])}
+        The solutions are: {" <--versus--> ".join(list(solutions)[:chosen_num])}
         Please provide a summary of the solutions.
+
+        Your answer should be very straightforward and concise. Just give the final answer regarding the problem.
         """
 
         if self.external_call:
