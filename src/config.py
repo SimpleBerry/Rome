@@ -166,7 +166,7 @@ def create_mctsr():
     Create and return a MCTSr model.
     https://arxiv.org/pdf/2406.07394
     """
-    mctsr_instance = MCTSr()
+    mctsr_instance = MCTSr(max_rollouts=2, max_children=2, samples_per_node=1)
     return TreeSolver(tree=mctsr_instance, external_call=getattr(mctsr_instance, "forward", None), solution_field="answer")
 
 def create_tot() -> Solver:

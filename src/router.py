@@ -1,6 +1,7 @@
 from typing import List, Tuple, Dict
 from dataclasses import dataclass
 from config import NAME2SOLVER, Solver
+from concurrent.futures import ThreadPoolExecutor
 
 @dataclass
 class Router:
@@ -14,19 +15,33 @@ class Router:
         pass
 
     def solve(self, problem: str) -> None:
-        for name, solver in self.solver_pool:
+        def solve_with_solver(name_solver):
+            name, solver = name_solver
             solution = solver.solve(problem)
-            self.solutions.setdefault(problem, {})[name] = solution[0] if isinstance(solution, list) else solution
+            return name, solution[0] if isinstance(solution, list) else solution
+        
+        with ThreadPoolExecutor() as executor:
+            results = executor.map(solve_with_solver, self.solver_pool)
+            
+        for name, solution in results:
+            self.solutions.setdefault(problem, {})[name] = solution
 
     def step_solve(self, problem: str, max_steps: int = 3) -> None:
         for name, solver in self.solver_pool:
             self.step_solutions.setdefault(problem, {})[name] = solver.step_solve(problem, max_steps)[0]
             
     def ensemble(self, names: List[str]) -> None:
-        for name in names:
-            name = name.lower()
-            if name not in NAME2SOLVER.keys():
-                raise ValueError(f"{name} is not a supported solver")
-            self.solver_pool.append( (name, NAME2SOLVER[name]) )
+        with ThreadPoolExecutor() as executor:
+            futures = [
+                executor.submit(self._add_solver, name.lower())
+                for name in names
+            ]
+            for future in futures:
+                future.result()
+            
+    def _add_solver(self, name: str):
+        if name not in NAME2SOLVER:
+            raise ValueError(f"{name} is not a supported solver")
+        self.solver_pool.append((name, NAME2SOLVER[name]))
 
     
