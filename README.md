@@ -8,6 +8,8 @@ We propose *Rome*, an ensemble approach grounded in parallelism and diversity, t
 # Getting Started
 ```
 pip install -r requirements.txt
+
+python3 src/main.py --problem "1 + 1 = ?" --methods tot mctsr
 ```
 
 # Results
