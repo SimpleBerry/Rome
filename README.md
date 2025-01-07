@@ -9,6 +9,10 @@ We propose *Rome*, an ensemble approach grounded in parallelism and diversity, t
 ```
 pip install -r requirements.txt
 
+## Terminal 1
+CUDA_VISIBLE_DEVICES=0 python3 -m sglang.launch_server --port 7501 --model-path meta-llama/Llama-3.1-8B-Instruct
+
+## Terminal 2
 python3 src/main.py --problem "1 + 1 = ?" --methods tot mctsr
 ```
 
