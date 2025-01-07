@@ -1,6 +1,5 @@
 import dspy
 from mcts_llm.mctsr import MCTSr
-from swarms import Agent
 from abc import ABC, abstractmethod
 from typing import List
 
@@ -16,10 +15,10 @@ from typing import List
 #     )
 # dspy.settings.configure(lm=ollama, experimental=True)
 
-lm = dspy.LM("openai/meta-llama/Llama-3.1-8B-Instruct",
+local_lm = dspy.LM("openai/meta-llama/Llama-3.1-8B-Instruct",    # "openai/Qwen/Qwen2.5-7B-Instruct"
              api_base="http://localhost:7501/v1",  # ensure this points to your port
              api_key="local", model_type='chat')
-dspy.configure(lm=lm)
+dspy.configure(lm=local_lm)
 
 class Solver(ABC):
 
@@ -84,7 +83,7 @@ class TreeSolver(Solver):
         """
             Returns a complete solution
         """
-        prompt = """
+        prompt = f"""
             Please provide a complete solution to the following problem:
             Problem: {problem}
 
@@ -126,47 +125,12 @@ class TreeSolver(Solver):
         else:
             return self.solver.solve(step_prompt).split(";;;")
 
-class AgentSolver(Solver):
-
-    def __init__(self, agent, external_call=None, solution_field: str=None):
-        self.solver = agent
-        self.external_call = external_call
-        self.solution_field = solution_field
-        
-    def solve(self, problem: str, external_call=None, solution_field: str=None) -> str:
-        """
-            Returns a complete solution
-        """
-        prompt = """
-            Please provide a complete solution to the following problem:
-            Problem: {problem}
-
-            Your response should be a single string that contains the complete solution.
-            """
-        return self.solver.run(prompt)
-
-    def step_solve(self, problem: str, max_steps: int, external_call=None, solution_field: str=None) -> List[str]:
-        """
-            Returns a list of partial solution
-        """
-        step_prompt = """
-            Please provide a list of {max_steps} steps to solve the following problem:
-            Problem: {problem}
-
-            Your response should be a list of steps in the following format: 
-            - Step 1: ...
-            - Step 2: ...
-            - Step 3: ...
-            All steps should be separated by ";;;".
-            """
-        return self.solver.run(step_prompt).split(";;;")
-
 def create_mctsr():
     """
     Create and return a MCTSr model.
     https://arxiv.org/pdf/2406.07394
     """
-    mctsr_instance = MCTSr(max_rollouts=2, max_children=2, samples_per_node=1)
+    mctsr_instance = MCTSr()
     return TreeSolver(tree=mctsr_instance, external_call=getattr(mctsr_instance, "forward", None), solution_field="answer")
 
 def create_tot() -> Solver:
@@ -193,7 +157,7 @@ def create_tot() -> Solver:
 
         def query_model(prompt: str) -> str:
             """Queries the model with the given prompt."""
-            return lm(prompt)
+            return local_lm(prompt)
 
         def expand_node(thought: str, depth: int) -> List[str]:
             """Generate child thoughts."""
@@ -239,11 +203,3 @@ NAME2SOLVER = {
     "mctsr": create_mctsr(),
     "tot": create_tot(),
 }
-
-# agent = Agent(
-#             agent_name="Reason-Agent",
-#             model_name="gpt-4o-mini",
-#             max_loops="auto",
-#             interactive=True,
-#             streaming_on=True,
-#         )
